@@ -45,6 +45,8 @@ public:
   bool GetSaveRooTracker() { return SaveRooTracker; }
   void FillGeoTree();
   TTree* GetTree(){return WCSimTree;}
+  TTree* GetScatteringTree() const { return fTree; } // Accessors for other actions like SteppingAction ---Loris
+  static constexpr int N_INTE_MAX = 100; // For max size of the scattering tree ---Loris
   TBranch* GetBranch(G4String detectorElement = "tank"){
     if(detectorElement=="tank") return wcsimrooteventbranch;
     else if(detectorElement=="tankPMT2")  return wcsimrooteventbranch2;
@@ -138,6 +140,15 @@ public:
   int GetRunID() { return run; }
   void SetRunID(int runID) { run = runID; }
 
+  //To fill the scattering root file in SteppingAction ---Loris
+  void FillTrackData(int evt, int trackID, int parentID, int procID, int PID,
+                     float time, float x, float y, float z,
+                     float mom_b, float dx_b, float dy_b, float dz_b,
+                     float mom_a, float dx_a, float dy_a, float dz_a,
+                     float ploss, int npip, int npim, int nmuons, int npi0, int nother, int boundary);
+
+  int GetPreviousEvent(){return sctEvent;}
+
  private:
   // MFechner : set by the messenger
   std::string RootFileName;
@@ -148,6 +159,8 @@ public:
 
   //
   TTree* WCSimTree;
+  TFile* fFile;// file for pion scattering ---Loris
+  TTree* fTree;// tree for pion scattering ---Loris
   TBranch* wcsimrooteventbranch;
   TBranch* wcsimrooteventbranch2;
   TBranch* wcsimrooteventbranch_OD;
@@ -233,6 +246,27 @@ public:
   int run;
   int event;
   int subevent;
+
+  //Scattering output ---Loris
+  int sctEvent = -1;
+  int n_interaction = 0;
+  int sctTrackID[N_INTE_MAX];
+  int sctParentID[N_INTE_MAX];
+  int sctProcID[N_INTE_MAX];
+  int sctPID[N_INTE_MAX];
+  float sctTime[N_INTE_MAX];
+  float sctPos[N_INTE_MAX][3];
+  float sctMomMagBefore[N_INTE_MAX];
+  float sctMomDirBefore[N_INTE_MAX][3];
+  float sctMomMagAfter[N_INTE_MAX];
+  float sctMomDirAfter[N_INTE_MAX][3];
+  float sctPloss[N_INTE_MAX];
+  int n_pip[N_INTE_MAX];
+  int n_pim[N_INTE_MAX];
+  int n_muons[N_INTE_MAX];
+  int n_pi0[N_INTE_MAX];
+  int n_other[N_INTE_MAX];
+  int isBoundary[N_INTE_MAX];
 
   //TriggerTree
   TriggerType_t trig_type;
