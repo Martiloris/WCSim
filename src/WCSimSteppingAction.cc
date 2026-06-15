@@ -74,6 +74,139 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
     }
   }
 
+  // Scattering output to fill ---Loris
+  bool is_pic = std::abs(track->GetDefinition()->GetPDGEncoding())==211;//checking if pi+/pi- or not
+
+  if(is_pic || std::abs(track->GetDefinition()->GetPDGEncoding())==13){// also accept tracking muon
+    auto sctRunAction = const_cast<WCSimRunAction*>(static_cast<const WCSimRunAction*>(G4RunManager::GetRunManager()->GetUserRunAction()));
+    bool isNewEvent = sctRunAction && event->GetEventID() != sctRunAction->GetPreviousEvent();
+
+    bool isNewVolume = thePrePoint->GetStepStatus() == fGeomBoundary;
+    if (isNewVolume) {
+      auto preVol  = thePrePoint->GetPhysicalVolume();
+      auto postVol = thePostPoint->GetPhysicalVolume();
+      G4String preName = (preVol) ? preVol->GetName() : "OutOfWorld";
+      G4String postName = (postVol) ? postVol->GetName() : "OutOfWorld";
+
+      G4cout << "Step crossed a geometry boundary!" << G4endl;
+      G4ThreeVector PPposition = thePrePoint->GetPosition();
+      G4cout << "=== First step at geometry boundary ===" << G4endl;
+      G4cout << "Volume: from " << preName << " to " << postName << G4endl;
+      G4cout << "Position: " << PPposition << " mm" << G4endl;
+      G4cout << "Time: " << thePrePoint->GetGlobalTime() << " ns" << G4endl;
+    }
+
+    const G4VProcess *proc = thePostPoint->GetProcessDefinedStep();
+    G4int procID = -2; // default if process not recognized
+    G4String processName;
+    if(proc!=NULL){
+      processName = proc->GetProcessName(); //Cerenkov, Scintilation and hadElastic, etc.
+      if (processName == "Transportation") procID = -1; //Transportation in not in the process list
+      else procID = WCSimEnumerations::ProcessTypeStringToEnum(proc->GetProcessName());
+    }
+
+    if ((processName != "Cerenkov" && processName != "hIoni" && processName != "Transportation" && processName != "muIoni") || isNewEvent || isNewVolume){
+      G4int trackID = track->GetTrackID();
+      G4int parentID = track->GetParentID();
+
+      const G4ThreeVector position = thePostPoint->GetPosition();
+      const G4ThreeVector preposition = thePrePoint->GetPosition();
+      // Get momentum vector (has units: MeV/c)
+      G4ThreeVector p_before = thePrePoint->GetMomentum();
+      G4ThreeVector p_after = thePostPoint->GetMomentum();
+
+      G4double time_ns = thePostPoint->GetGlobalTime();
+      G4double pretime_ns = thePrePoint->GetGlobalTime();
+
+      std::cout << "(" << track->GetDefinition()->GetPDGEncoding() << ", ID " << trackID << ") process " << proc->GetProcessType() << " :  " << processName << " , " << p_before.mag() << " MeV/c, " <<position.x()<<" "<<position.y()<<" "<<position.z() << " , " << time_ns << " ns" << std::endl;
+
+      // Look for a secondary pi+ in the current step
+      const std::vector<const G4Track*>* secondaries = aStep->GetSecondaryInCurrentStep();
+      const G4Track* newPion = nullptr;
+      G4double max_p_mag = -1.0;
+
+      int N_pip = 0;
+      int N_pim = 0;
+      int N_muons = 0;
+      int N_pi0 = 0;
+      int N_other = 0;
+
+      for (const auto* sec : *secondaries)
+      {
+        if (std::abs(sec->GetDefinition()->GetPDGEncoding())==211) //(sec->GetDefinition()->GetParticleName() == "pi+")
+        {
+          G4double p_mag = sec->GetMomentum().mag();
+          if (p_mag > max_p_mag)
+          {  
+            max_p_mag = p_mag;
+            newPion = sec;
+          }
+        }
+        
+      	G4String name = sec->GetDefinition()->GetParticleName();
+      	if (name == "pi0") ++N_pi0;
+      	if (sec->GetDefinition()->GetPDGCharge() == 0.) continue; // neutral particles can't emit Cherenkov
+      	G4cout << "Secondary: " << sec->GetDefinition()->GetParticleName() << G4endl;
+      	G4double beta = sec->GetVelocity() / CLHEP::c_light; // in mm/ns
+        G4double n = 1.33; // refractive index for water
+
+        if (name == "pi+") ++N_pip;
+        if (name == "pi-") ++N_pim;
+        else if (name == "mu+" || name == "mu-") ++N_muons;
+        else if (beta <= 1.0 / n) continue; // below Cherenkov threshold, skip
+        else ++N_other;
+      }
+
+      if (newPion)
+      {
+        p_after = newPion->GetMomentum();
+
+        G4cout << "\n==== pi+Inelastic with outgoing pi+ (highest momentum) ====" << G4endl;
+        G4cout << "Initial pi+ momentum: " << p_before.mag() << " MeV/c" << G4endl;
+        G4cout << "Secondary pi+ momentum: " << p_after.mag() << " MeV/c" << G4endl;
+        G4cout << "Lost momentum: " << p_before.mag() - p_after.mag() << " MeV/c" << G4endl;
+      }
+
+      // Extract direction components (unit vector)
+      G4ThreeVector dir, predir;
+      predir = (p_before.mag2() > 0) ? p_before.unit() : G4ThreeVector(0, 0, 0);
+      dir = (p_after.mag2() > 0) ? p_after.unit() : G4ThreeVector(0, 0, 0);
+      G4double dirX = dir.x();
+      G4double dirY = dir.y();
+      G4double dirZ = dir.z();
+      G4double predirX = predir.x();
+      G4double predirY = predir.y();
+      G4double predirZ = predir.z();
+
+      // Assign and fill
+      float momMag, Ploss, premomMag, prePloss;
+      premomMag = p_before.mag(); // already in MeV/c
+      prePloss = 0.;
+      momMag = p_after.mag();
+      Ploss = p_before.mag() - p_after.mag();
+
+      if (sctRunAction) {
+        if (isNewEvent || isNewVolume) sctRunAction->FillTrackData(
+          G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID(), trackID, parentID, procID, track->GetDefinition()->GetPDGEncoding(),
+          pretime_ns, preposition.x() / 10., preposition.y() / 10., preposition.z() / 10.,
+          premomMag, predirX, predirY, predirZ,
+          0, 0, 0, 0,// do not keep post step, will be saved below if process is useful
+          prePloss, N_pip, N_pim, N_muons, N_pi0, N_other,
+          1//static_cast<int>(isNewEvent || isNewVolume)
+        );
+
+        if (processName != "Cerenkov" && processName != "hIoni" && processName != "Transportation" && processName != "muIoni") sctRunAction->FillTrackData(
+          G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID(), trackID, parentID, procID, track->GetDefinition()->GetPDGEncoding(),
+          time_ns, position.x() / 10., position.y() / 10., position.z() / 10.,
+          premomMag, predirX, predirY, predirZ,
+          momMag, dirX, dirY, dirZ,
+          Ploss, N_pip, N_pim, N_muons, N_pi0, N_other,
+          0//static_cast<int>(isNewVolume)
+        );
+      }
+    }
+  }
+
   G4ParticleDefinition *particleType = track->GetDefinition();
   if(particleType == G4OpticalPhoton::OpticalPhotonDefinition() && thePrePV && thePostPV){
     if( (thePrePV->GetName().find("MultiPMT") != std::string::npos) &&
