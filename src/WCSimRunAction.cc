@@ -500,6 +500,80 @@ void WCSimRunAction::BeginOfRunAction(const G4Run* aRun)
                      "trackID/I:parentID/I:pos[3]/D:distance/D:wl/D:proc/I");
   */
   }//useFlatROOTout
+
+  // Scattering output root file ---Loris
+  // Generate filename using the random seed
+  long seed = G4Random::getTheSeeds() ? G4Random::getTheSeeds()[0] : -1;
+  std::ostringstream fname;
+  fname << "interactions_seed_" << seed << ".root";
+
+  fFile = new TFile(fname.str().c_str(), "RECREATE");
+  fTree = new TTree("Tracks", "Tracking Data");
+
+  // Create branches
+  fTree->Branch("event", &sctEvent, "event/I");
+  fTree->Branch("n_interaction", &n_interaction, "n_interaction/I");
+  fTree->Branch("TrackID", sctTrackID, "TrackID[n_interaction]/I");
+  fTree->Branch("ParentID", sctParentID, "ParentID[n_interaction]/I");
+  fTree->Branch("ProcID", sctProcID, "ProcID[n_interaction]/I");
+  fTree->Branch("PID", sctPID, "PID[n_interaction]/I");
+  fTree->Branch("Time", sctTime, "Time[n_interaction]/F");
+  fTree->Branch("pos", sctPos, "pos[n_interaction][3]/F");
+  fTree->Branch("preP", sctMomMagBefore, "preP[n_interaction]/F");
+  fTree->Branch("preDir", sctMomDirBefore, "preDir[n_interaction][3]/F");
+  fTree->Branch("postP", sctMomMagAfter, "postP[n_interaction]/F");
+  fTree->Branch("postDir", sctMomDirAfter, "postDir[n_interaction][3]/F");
+  fTree->Branch("Ploss", sctPloss, "Ploss[n_interaction]/F");
+  fTree->Branch("n_pip", n_pip, "n_pip[n_interaction]/I");
+  fTree->Branch("n_pim", n_pim, "n_pim[n_interaction]/I");
+  fTree->Branch("n_muons", n_muons, "n_muons[n_interaction]/I");
+  fTree->Branch("n_pi0", n_pi0, "n_pi0[n_interaction]/I");
+  fTree->Branch("n_other", n_other, "n_other[n_interaction]/I");
+  fTree->Branch("isBoundary", isBoundary, "isBoundary[n_interaction]/I");
+}
+
+// Fill the scattering tree ---Loris
+void WCSimRunAction::FillTrackData(int evt, int trackID, int parentID, int procID, int PID,
+                                   float time, float x, float y, float z,
+                                   float mom_b, float dx_b, float dy_b, float dz_b,
+                                   float mom_a, float dx_a, float dy_a, float dz_a,
+                                   float ploss, int npip, int npim, int nmuons, int npi0, int nother, int boundary) {
+    if (sctEvent != evt && sctEvent != -1){ // don't fill first entry of first event
+      if (fTree) fTree->Fill();
+      n_interaction = 0;
+    }
+
+    if (n_interaction >= N_INTE_MAX){
+      G4cout << "Number of max Interactions not high enough (" << N_INTE_MAX << ") : " << G4endl;
+      return;
+    }
+
+    sctEvent = evt;
+    sctTrackID[n_interaction] = trackID;
+    sctParentID[n_interaction] = parentID;
+    sctProcID[n_interaction] = procID;
+    sctPID[n_interaction] = PID;
+    sctTime[n_interaction] = time;
+    sctPos[n_interaction][0] = x;
+    sctPos[n_interaction][1] = y;
+    sctPos[n_interaction][2] = z;
+    sctMomMagBefore[n_interaction] = mom_b;
+    sctMomDirBefore[n_interaction][0] = dx_b;
+    sctMomDirBefore[n_interaction][1] = dy_b;
+    sctMomDirBefore[n_interaction][2] = dz_b;
+    sctMomMagAfter[n_interaction] = mom_a;
+    sctMomDirAfter[n_interaction][0] = dx_a;
+    sctMomDirAfter[n_interaction][1] = dy_a;
+    sctMomDirAfter[n_interaction][2] = dz_a;
+    sctPloss[n_interaction] = ploss;
+    n_pip[n_interaction] = npip;
+    n_pim[n_interaction] = npim;
+    n_muons[n_interaction] = nmuons;
+    n_pi0[n_interaction] = npi0;
+    n_other[n_interaction] = nother;
+    isBoundary[n_interaction] = boundary;
+
+    n_interaction++;
 }
 
 void WCSimRunAction::EndOfRunAction(const G4Run*)
@@ -568,6 +642,14 @@ void WCSimRunAction::EndOfRunAction(const G4Run*)
     delete wcsimrootsuperevent_OD; wcsimrootsuperevent_OD=0;
     delete wcsimrootgeom; wcsimrootgeom=0;
   }//useDefaultROOTout
+
+  if (fFile && fTree) {//scattering output ---Loris
+    fFile->cd();
+    if (fTree) fTree->Fill();// last event
+    fTree->Write();
+
+    fFile->Close();
+  }
 
   if(useTimer) {
     timer.Stop();
