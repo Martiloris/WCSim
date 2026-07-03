@@ -152,7 +152,11 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
 
         if (name == "pi+") ++N_pip;
         if (name == "pi-") ++N_pim;
-        else if (name == "mu+" || name == "mu-") ++N_muons;
+        else if (name == "mu+" || name == "mu-")
+		{
+			++N_muons;
+			newPion = sec; // store the decay muon for the post-step
+		}
         else if (beta <= 1.0 / n) continue; // below Cherenkov threshold, skip
         else ++N_other;
       }
@@ -161,9 +165,9 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
       {
         p_after = newPion->GetMomentum();
 
-        G4cout << "\n==== pi+Inelastic with outgoing pi+ (highest momentum) ====" << G4endl;
-        G4cout << "Initial pi+ momentum: " << p_before.mag() << " MeV/c" << G4endl;
-        G4cout << "Secondary pi+ momentum: " << p_after.mag() << " MeV/c" << G4endl;
+        G4cout << "\n==== Secondary with outgoing " << newPion->GetDefinition()->GetParticleName() << " (highest momentum) ====" << G4endl;
+        G4cout << "Initial momentum: " << p_before.mag() << " MeV/c" << G4endl;
+        G4cout << "Secondary momentum: " << p_after.mag() << " MeV/c" << G4endl;
         G4cout << "Lost momentum: " << p_before.mag() - p_after.mag() << " MeV/c" << G4endl;
       }
 
