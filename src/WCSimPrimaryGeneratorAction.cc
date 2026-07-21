@@ -36,6 +36,7 @@
 
 //#include "WCSimEnumerations.hh"
 
+#include "G4UIcmdWithADoubleAndUnit.hh" // beam profile ---Loris/Thorsten
 #include "G4Navigator.hh"
 #include "G4TransportationManager.hh"
 
@@ -906,6 +907,26 @@ void WCSimPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   else if (useGPSEvt)
     {
       MyGPS->GeneratePrimaryVertex(anEvent);
+
+      // WCTE beam setting ---Loris/Thorsten
+      // Create the start point within a 2D Gauss within diameter of the beam monitor (not beam pipe to be correct)
+      if (gpsBeamPipeDiameter > 0.) {
+        G4PrimaryVertex* vertex = anEvent->GetPrimaryVertex();
+
+        const G4double z = vertex->GetZ0();
+        const G4double x0 = vertex->GetX0();
+        const G4double y0 = vertex->GetY0();
+ 
+        const G4double rmax = 0.5 * gpsBeamPipeDiameter;
+
+        G4double x, y;
+        do {
+          x = G4RandGauss::shoot(x0, gpsBeamSigmaX);
+          y = G4RandGauss::shoot(y0, gpsBeamSigmaY);
+        } while ((x - x0)*(x - x0) + (y - y0)*(y - y0) > rmax*rmax);
+
+        vertex->SetPosition(x, y, z);
+      }
 
       G4ThreeVector P   =anEvent->GetPrimaryVertex()->GetPrimary()->GetMomentum();
       G4ThreeVector vtx =anEvent->GetPrimaryVertex()->GetPosition();

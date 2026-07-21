@@ -14,6 +14,7 @@ class G4UIcmdWithADouble;
 #include "G4UIcmdWith3Vector.hh"
 #include "globals.hh"
 #include "G4Tokenizer.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh" // added for beam profile ---Loris/Thorsten
 
 class WCSimPrimaryGeneratorMessenger: public G4UImessenger
 {
@@ -44,6 +45,11 @@ class WCSimPrimaryGeneratorMessenger: public G4UImessenger
   G4UIcmdWithAnInteger* radonScalingCmd;
   G4UIcmdWithAnInteger* radonGeoSymCmd;
   G4UIcmdWithADouble* radonWaterConcCmd;
+
+  // beam profile within beam monitor diameter ---Loris/Thorsten
+  G4UIcmdWithADoubleAndUnit* gpsBeamPipeDiameterCmd;
+  G4UIcmdWithADoubleAndUnit* gpsBeamSigmaXCmd;
+  G4UIcmdWithADoubleAndUnit* gpsBeamSigmaYCmd;
 
   // K.M.Tsui: addition of injector events
   G4UIcmdWithAnInteger* nPhotonsCmd;

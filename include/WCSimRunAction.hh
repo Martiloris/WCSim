@@ -145,7 +145,8 @@ public:
                      float time, float x, float y, float z,
                      float mom_b, float dx_b, float dy_b, float dz_b,
                      float mom_a, float dx_a, float dy_a, float dz_a,
-                     float ploss, int npip, int npim, int nmuons, int npi0, int nother, int boundary);
+                     float ploss, int npip, int npim, int nmuons, int npi0, int nother, int iatom,
+		     int boundary);
 
   int GetPreviousEvent(){return sctEvent;}
 
@@ -266,6 +267,7 @@ public:
   int n_muons[N_INTE_MAX];
   int n_pi0[N_INTE_MAX];
   int n_other[N_INTE_MAX];
+  int i_atom[N_INTE_MAX];
   int isBoundary[N_INTE_MAX];
 
   //TriggerTree

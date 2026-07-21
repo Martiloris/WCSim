@@ -529,6 +529,7 @@ void WCSimRunAction::BeginOfRunAction(const G4Run* aRun)
   fTree->Branch("n_muons", n_muons, "n_muons[n_interaction]/I");
   fTree->Branch("n_pi0", n_pi0, "n_pi0[n_interaction]/I");
   fTree->Branch("n_other", n_other, "n_other[n_interaction]/I");
+  fTree->Branch("i_atom", i_atom, "i_atom[n_interaction]/I");
   fTree->Branch("isBoundary", isBoundary, "isBoundary[n_interaction]/I");
 }
 
@@ -537,7 +538,8 @@ void WCSimRunAction::FillTrackData(int evt, int trackID, int parentID, int procI
                                    float time, float x, float y, float z,
                                    float mom_b, float dx_b, float dy_b, float dz_b,
                                    float mom_a, float dx_a, float dy_a, float dz_a,
-                                   float ploss, int npip, int npim, int nmuons, int npi0, int nother, int boundary) {
+                                   float ploss, int npip, int npim, int nmuons, int npi0, int nother, int iatom,
+				   int boundary) {
     if (sctEvent != evt && sctEvent != -1){ // don't fill first entry of first event
       if (fTree) fTree->Fill();
       n_interaction = 0;
@@ -571,6 +573,7 @@ void WCSimRunAction::FillTrackData(int evt, int trackID, int parentID, int procI
     n_muons[n_interaction] = nmuons;
     n_pi0[n_interaction] = npi0;
     n_other[n_interaction] = nother;
+    i_atom[n_interaction] = iatom;
     isBoundary[n_interaction] = boundary;
 
     n_interaction++;

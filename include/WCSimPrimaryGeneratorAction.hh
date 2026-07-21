@@ -61,6 +61,11 @@ public:
   void SetNvtxs(G4int i)     { nvtxs = i; };
   void SetVtxs(G4int i, G4ThreeVector v)     { vtxs[i] = v; };
 
+  // WCTE beam pipe setting ---Loris/Thorsten
+  inline void SetGPSBeamPipeDiameter(G4double v) { gpsBeamPipeDiameter = v; }
+  inline void SetGPSBeamSigmaX(G4double v) { gpsBeamSigmaX = v; }
+  inline void SetGPSBeamSigmaY(G4double v) { gpsBeamSigmaY = v; }
+
   // These go with jhfNtuple
   G4int GetVecRecNumber(){return vecRecNumber;}
   G4int GetMode(int vertex = 0){return mode[vertex];};
@@ -125,6 +130,12 @@ private:
   G4String vectorFileName;
   G4String cosmicsFileName = "data/MuonFlux-HyperK-ThetaPhi.dat";
   G4bool   GenerateVertexInRock;
+
+  // WCTE beam pipe setting ---Loris/Thorsten
+  // Beam profile simulation, setting gpsBeamPipeDiameter to 0.0 makes that pipe/monitor diameter is ignored
+  G4double gpsBeamPipeDiameter = 0.0;
+  G4double gpsBeamSigmaX = 0.0;
+  G4double gpsBeamSigmaY = 0.0;
 
   // AmBe Generator 
   WCSimAmBeGen* AmBeGen;

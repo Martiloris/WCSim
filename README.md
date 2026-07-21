@@ -12,6 +12,29 @@ notifications [here](https://lists.phy.duke.edu/mailman/listinfo/wcsim-git)
 
 You can follow issues/requests etc by watching the GitHub respository.
 
+## Modifications in this fork
+
+This fork introduces two main modifications to the original project.
+
+### 1. Interaction output file
+
+A new ROOT output file, `interactions_seed_xx.root`, is produced for each simulation, where `xx` corresponds to the random seed used for that run.
+
+This file stores detailed information about:
+
+* pion and muon interactions, including those from the `hadElastic` process;
+* particle boundary crossings, recording whenever a particle passes from one volume to another.
+
+To help users understand the structure and contents of this file, an example analysis script is provided in:
+
+`sample-root-scripts/read_interactions.C`
+
+### 2. WCTE beam configuration
+
+The beam configuration for WCTE has been modified to include the Gaussian spatial spread of the beam while constraining the beam profile to the position of the T5 detector.
+
+This configuration is enabled in the `macros/WCTE.mac` macro.
+
 ## Validation Webpage
 
 WCSim uses GitHub Actions CI to perform build and physics tests for each pull request and commit.

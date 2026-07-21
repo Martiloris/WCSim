@@ -130,6 +130,7 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
       int N_muons = 0;
       int N_pi0 = 0;
       int N_other = 0;
+      int atomID = 0;
 
       for (const auto* sec : *secondaries)
       {
@@ -144,6 +145,9 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
         }
         
       	G4String name = sec->GetDefinition()->GetParticleName();
+
+	if (atomID == 0) atomID = WCSimEnumerations::NuclideStringToEnum(name);
+
       	if (name == "pi0") ++N_pi0;
       	if (sec->GetDefinition()->GetPDGCharge() == 0.) continue; // neutral particles can't emit Cherenkov
       	G4cout << "Secondary: " << sec->GetDefinition()->GetParticleName() << G4endl;
@@ -195,7 +199,7 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
           pretime_ns, preposition.x() / 10., preposition.y() / 10., preposition.z() / 10.,
           premomMag, predirX, predirY, predirZ,
           0, 0, 0, 0,// do not keep post step, will be saved below if process is useful
-          prePloss, N_pip, N_pim, N_muons, N_pi0, N_other,
+          prePloss, N_pip, N_pim, N_muons, N_pi0, N_other, 0,
           1//static_cast<int>(isNewEvent || isNewVolume)
         );
 
@@ -204,7 +208,7 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
           time_ns, position.x() / 10., position.y() / 10., position.z() / 10.,
           premomMag, predirX, predirY, predirZ,
           momMag, dirX, dirY, dirZ,
-          Ploss, N_pip, N_pim, N_muons, N_pi0, N_other,
+          Ploss, N_pip, N_pim, N_muons, N_pi0, N_other, atomID,
           0//static_cast<int>(isNewVolume)
         );
       }

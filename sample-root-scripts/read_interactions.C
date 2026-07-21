@@ -1,6 +1,8 @@
 #include <iostream>
 #include "TFile.h"
 #include "TTree.h"
+#include <string.h>
+#include <unordered_map>
 
 void read_interactions(const char* filename = "input.root") {
 
@@ -49,6 +51,7 @@ void read_interactions(const char* filename = "input.root") {
   Int_t n_muons[MAX];       // Number of secondary mu at interaction
   Int_t n_pi0[MAX];         // Number of secondary pi0 at interaction
   Int_t n_other[MAX];       // Number of secondary charged particles above Cherenkov threshold at interaction
+  Int_t i_atom[MAX];        // ID of a secondary atom produced at the interaction
 
   Int_t isBoundary[MAX];    // Is this position cross a boundary? 0 or 1
 
@@ -80,8 +83,27 @@ void read_interactions(const char* filename = "input.root") {
   tree->SetBranchAddress("n_muons", n_muons);
   tree->SetBranchAddress("n_pi0", n_pi0);
   tree->SetBranchAddress("n_other", n_other);
+  tree->SetBranchAddress("i_atom", i_atom);
 
   tree->SetBranchAddress("isBoundary", isBoundary);
+
+  // Map for atom of interest for WCTE
+  const std::unordered_map<int, std::string> kNuclideNames{
+    {0, "None"},
+    {1, "Li9"},
+    {2, "B12"},
+    {3, "N16"},
+    {4, "Li8"},
+    {5, "B8"},
+    {6, "B13"},
+    {7, "Be12"},
+    {8, "C15"},
+    {9, "Be11"},
+    {10, "O13"},
+    {11, "C9"},
+  };
+  // The full list can be found in the file include/WCSimEnumerations.hh
+  // Other possibility is to use directly the functions I added inside the file src/WCSimEnumerations.cc
 
   // ---------------------------
   // Loop over events
@@ -161,7 +183,7 @@ void read_interactions(const char* filename = "input.root") {
         The function WCSimEnumerations::EnumAsString can be used from src/WCSimEnumerations.cc to have the ID -> name
         Only exception is ID = -1, which is the process "Transportation" (no interaction)
         The process "Scintillation" is used to describe decay at rest while process "Decay" is decay in flight
-        Both "Scintillation" and "Decay" have the muon as post-step information (updated)
+        The process "Decay" has the muon as post-step information (updated)
         The process "pi+Inelastic" can describe absorption, charge exchange, inelastic scattering or even resonnance
         */
 
@@ -197,6 +219,11 @@ void read_interactions(const char* filename = "input.root") {
                   << ", pi0 = " << n_pi0[j]
                   << ", other = " << n_other[j] // Number of secondary charged particles above Cherenkov threshold at interaction
                   << std::endl;
+
+	// Secondary atom
+	auto it = kNuclideNames.find(i_atom[j]);
+	std::string nuclide = (it != kNuclideNames.end()) ? it->second : kNuclideNames.at(0);
+	std::cout << "  Atom of interest: " << nuclide << std::endl;
       }
     }
   }
