@@ -149,8 +149,9 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructBeamPipe()
   // -- Positioning Logic --
   // Starts in Z at: 5 mm from the start of the pipe
   // The start of the beam pipe volume is at z=0 in this Polycone construction.
-  G4double z_assembly_start = 5.0 * mm;
-  G4double z_assembly_center = z_assembly_start + (totalAssemblyThickness / 2.0);
+  // T5 was on the wrong side of the beam pipe, changed start and center position --- Loris
+  G4double z_assembly_start = pmt_blacksheet_offset + window_blacksheet_distance - 5.0 * mm;
+  G4double z_assembly_center = z_assembly_start - (totalAssemblyThickness / 2.0);
 
   // Calculate Start Y to center the stack vertically
   G4double totalStackHeight = nBars * barHeight; 
