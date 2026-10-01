@@ -162,9 +162,31 @@
 # https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/Control/AllResources/Control/UIcommands/_gps_.html
 /mygen/generator gps
 /gps/particle e-
-/gps/energy 500 MeV
-/gps/direction -1 0 0
-/gps/position 165 0 0
+#/gps/energy 500 MeV
+#/gps/direction 0 0 1
+#/gps/position 0 -42.47625 -153.7963
+
+##################
+# BEAM POSITION
+##################
+
+# Enable truncated Gaussian beam
+/mygen/gpsBeamPipeDiameter 12 cm
+/mygen/gpsBeamSigmaX 3.2 cm
+/mygen/gpsBeamSigmaY 3.2 cm
+
+# Beam pipe position and direction
+# Centre of the beam spot: keep the old point-beam centre
+/gps/direction 0 0 1
+/gps/pos/type Beam
+/gps/pos/centre 0 -42.47625 -153.7963 cm
+
+# Momentum spread: 1% or 2% around the nominal kinetic-energy beam.
+# GPS controls kinetic energy, not momentum. For mu- with T = 900 MeV,
+# p ~= 1000 MeV/c and sigma_p/p = 2% corresponds to sigma_T ~= 19.9 MeV.
+/gps/ene/type Gauss
+/gps/ene/mono 900 MeV
+/gps/ene/sigma 19.9 MeV
 
 # Or you can use the laser option
 # This is equivalent to the gps command, except that the gps particle energies are saved ignoring their mass

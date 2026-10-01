@@ -186,6 +186,21 @@ typedef enum EProcessType { // Diego Costas 27/02/2024
   kInitialParticle
 } ProcessType_t;
 
+typedef enum ENuclideIndex { // For tracking atoms in SteppingAction ---Loris
+  kOtherAtom,
+  kLi9,
+  kB12,
+  kN16,
+  kLi8,
+  kB8,
+  kB13,
+  kBe12,
+  kC15,
+  kBe11,
+  kO13,
+  kC9
+} NuclideIndex_t;
+
 class WCSimEnumerations
 {
 public:
@@ -202,6 +217,8 @@ public:
   //! These ProcessType_t strings must use the same naming convention as Geant4
   static ProcessType_t ProcessTypeStringToEnum(const std::string& str);
   static TriggerType_t TriggerTypeFromString(std::string s);
+  static NuclideIndex_t NuclideStringToEnum(const std::string& str);// For tracking atoms in SteppingAction ---Loris
+  static std::string EnumAsString(NuclideIndex_t r);
 
 };
 

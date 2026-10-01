@@ -752,6 +752,75 @@ ProcessType_t WCSimEnumerations::ProcessTypeStringToEnum(const std::string& str)
   }
 }
 
+// For Trackin atoms in SteppingAction ---Loris
+std::string WCSimEnumerations::EnumAsString(NuclideIndex_t r)
+{
+  switch(r) {
+  case (kLi9) :
+    return "Li9";
+    break;
+  case (kB12) :
+    return "B12";
+    break;
+  case (kN16) :
+    return "N16";
+    break;
+  case (kLi8) :
+    return "Li8";
+    break;
+  case (kB8) :
+    return "B8";
+    break;
+  case (kB13) :
+    return "B13";
+    break;
+  case (kBe12) :
+    return "Be12";
+    break;
+  case (kC15) :
+    return "C15";
+    break;
+  case (kBe11) :
+    return "Be11";
+    break;
+  case (kO13) :
+    return "O13";
+    break;
+  case (kC9) :
+    return "C9";
+    break;
+  default:
+    return "none";
+    break;
+  }
+}
+
+NuclideIndex_t WCSimEnumerations::NuclideStringToEnum(const std::string& str) {
+  if (str == "Li9") {
+    return kLi9;
+  } else if (str == "B12") {
+    return kB12;
+  } else if (str == "N16") {
+    return kN16;
+  } else if (str == "Li8") {
+    return kLi8;
+  } else if (str == "B8") {
+    return kB8;
+  } else if (str == "B13") {
+    return kB13;
+  } else if (str == "Be12") {
+    return kBe12;
+  } else if (str == "C15") {
+    return kC15;
+  } else if (str == "Be11") {
+    return kBe11;
+  } else if (str == "O13") {
+    return kO13;
+  } else if (str == "C9") {
+    return kC9;
+  } else return kOtherAtom;
+}
+
 TriggerType_t WCSimEnumerations::TriggerTypeFromString(std::string s)
 {
   for(int i = int(kTriggerUndefined)+1; i <= kTriggerFailure; i++) {
